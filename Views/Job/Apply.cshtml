@@ -1,0 +1,99 @@
+﻿@model JobApplicationModel
+@{
+    ViewData["Title"] = "Apply for Job";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3><i class="fas fa-file-alt me-2"></i> Job Application</h3>
+                    <p class="mb-0">Apply for Job ID: @Model.JobId</p>
+                </div>
+                <div class="card-body p-5">
+                    @if (Model.CandidateId == null)
+                    {
+                        <div class="alert alert-warning">
+                            <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Authentication Required</h4>
+                            <p>You need to be logged in to apply for this position.</p>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                </a>
+                                <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Context.Request.Path" class="btn btn-outline-primary">
+                                    <i class="fas fa-user-plus me-2"></i>Register
+                                </a>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="Apply" method="post" enctype="multipart/form-data">
+                            <input type="hidden" asp-for="JobId" />
+                            <input type="hidden" asp-for="CandidateId" />
+
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger">
+                                <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+
+                            <div class="form-floating mb-4">
+                                <textarea asp-for="CoverLetter" class="form-control" placeholder="Enter your cover letter" style="height: 200px"></textarea>
+                                <label asp-for="CoverLetter">Cover Letter</label>
+                                <div class="form-text">Tell us why you're the perfect candidate for this position</div>
+                                <span asp-validation-for="CoverLetter" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="ResumeFile" class="form-label">
+                                    <i class="fas fa-file-upload me-2"></i>Resume Upload
+                                </label>
+                                <input asp-for="ResumeFile" type="file" class="form-control">
+                                <span asp-validation-for="ResumeFile" class="text-danger small"></span>
+                                <div class="form-text">Accepted formats: PDF, DOC, DOCX (Max 5MB)</div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary me-md-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <button class="btn btn-primary ladda-button" type="submit" data-style="zoom-in">
+                                    <span class="ladda-label">
+                                        <i class="fas fa-paper-plane me-2"></i>Submit Application
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            // Initialize Ladda buttons
+            Ladda.bind('.ladda-button', { timeout: 2000 });
+
+            // Enhance file input display
+            $('input[type="file"]').change(function(e) {
+                var fileName = e.target.files[0].name;
+                $(this).next('.form-text').html('Selected file: <strong>' + fileName + '</strong>');
+            });
+
+            // Auto-resize textarea as user types
+            $('textarea').each(function () {
+                this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+            }).on('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
+    </script>
+}

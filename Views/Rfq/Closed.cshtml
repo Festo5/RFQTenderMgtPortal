@@ -1,0 +1,116 @@
+﻿@model RfqViewModel
+@{
+    var colorSettings = Model.ColorSettings;
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">Closed RFQs</h3>
+
+            @if (Model.OpenLines.Any())
+            {
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="align-middle">Description</th>
+                                        <th class="text-end align-middle">Quantity</th>
+                                        <th class="text-end align-middle">Unit Cost</th>
+                                        <th class="text-center align-middle">VAT Option</th>
+                                        <th class="text-end align-middle">VAT %</th>
+                                        <th class="text-end align-middle">Total</th>
+                                        <th class="text-center align-middle">Category</th>
+                                        <th class="text-center align-middle">Closing Date</th>
+                                        <th class="text-center align-middle">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var line in Model.OpenLines)
+                                    {
+                                        var total = line.Quantity * line.DirectUnitCost;
+                                        if (line.VatOption == "Vatable" && !line.PriceIncludesVAT)
+                                        {
+                                            total *= (1m + line.VatPercentage / 100m);
+                                        }
+
+                                        <tr>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    @line.Description
+                                                    <button class="btn btn-sm btn-link ms-2 view-specs"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#specsModal"
+                                                            data-item-no="@line.No"
+                                                            data-description="@line.Description"
+                                                            title="View item specifications">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="text-end align-middle">@line.Quantity.ToString("0.00")</td>
+                                            <td class="text-end align-middle">@line.DirectUnitCost.ToString("0.00")</td>
+                                            <td class="text-center align-middle">@line.VatOption</td>
+                                            <td class="text-end align-middle">@line.VatPercentage.ToString("0.00")</td>
+                                            <td class="text-end align-middle">@total.ToString("0.00")</td>
+                                            <td class="text-center align-middle">@line.CategoryCode</td>
+                                            <td class="text-center align-middle">
+                                                @(line.RfqExpirationDate?.ToString("yyyy-MM-dd") ?? "-")
+                                            </td>
+                                            <td class="text-center align-middle">
+                                                <span class="badge bg-secondary">Closed</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No closed RFQs found.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Include the same modal and scripts as Index.cshtml -->
+@section Styles {
+    <style>
+        :root {
+            @colorSettings.PrimaryColorCss
+            @colorSettings.SecondaryColorCss
+            @colorSettings.Tertiary1ColorCss
+            @colorSettings.Tertiary2ColorCss
+            @colorSettings.Tertiary3ColorCss
+        }
+
+        /* Closed status badge */
+        .badge.bg-secondary {
+            background-color: var(--secondary-color) !important;
+            color: white;
+        }
+
+        /* View specs button */
+        .view-specs {
+            color: #6c757d;
+            padding: 0.15rem 0.3rem;
+            font-size: 0.875rem;
+        }
+
+            .view-specs:hover {
+                color: var(--primary-color);
+            }
+
+        /* Table hover effect */
+        .table-hover tbody tr:hover {
+            background-color: rgba(var(--primary-color), 0.05);
+        }
+    </style>
+}

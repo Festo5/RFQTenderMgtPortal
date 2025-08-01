@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TenderBridge</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/RecruitmentPortal.styles.css" asp-append-version="true" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Ladda -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda-themeless.min.css" rel="stylesheet">
+
+    <!-- Toastr -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --primary-color: #00D084;
+            --secondary-color: #00a86b;
+            --tertiary1-color: #198754; /* Success green */
+            --tertiary2-color: #ffc107; /* Warning orange */
+            --tertiary3-color: #0d6efd; /* Primary blue */
+            --dark-color: #111;
+            --light-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            font-weight: 500;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+            .btn-primary:hover {
+                background-color: var(--secondary-color);
+                border-color: var(--secondary-color);
+            }
+
+        /* Status Badges */
+        .bg-success {
+            background-color: var(--tertiary1-color) !important;
+        }
+
+        .bg-warning {
+            background-color: var(--tertiary2-color) !important;
+        }
+
+        .bg-info {
+            background-color: var(--tertiary3-color) !important;
+        }
+
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: honeydew;
+            color: #333;
+            border-top: 1px solid #e9ecef;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+
+            .footer a {
+                color: var(--primary-color);
+                text-decoration: none;
+            }
+
+                .footer a:hover {
+                    color: var(--secondary-color);
+                    text-decoration: underline;
+                }
+
+            .footer hr {
+                border-color: rgba(0,0,0,0.1);
+                margin: 1.5rem auto;
+            }
+
+            .footer small {
+                color: #6c757d;
+            }
+
+        /* Layout Structure */
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+        }
+
+        /* Additional Utility Classes */
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .text-secondary {
+            color: var(--secondary-color) !important;
+        }
+
+        .text-tertiary1 {
+            color: var(--tertiary1-color) !important;
+        }
+
+        .text-tertiary2 {
+            color: var(--tertiary2-color) !important;
+        }
+
+        .text-tertiary3 {
+            color: var(--tertiary3-color) !important;
+        }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white py-3">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-handshake me-2"></i>TenderBridge
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index"><i class="fas fa-home me-1"></i> Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Tender" asp-action="Index"><i class="fas fa-file-contract me-1"></i> Tenders</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Rfq" asp-action="Index">
+                                <i class="fas fa-file-contract me-1"></i> RFQs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="ImprestItemRequisition" asp-action="Index">
+                                <i class="fas fa-shopping-cart me-1"></i> Requisitions
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index"><i class="fas fa-user me-2"></i> Profile</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form class="form-inline" asp-controller="Account" asp-action="Logout">
+                                            <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt me-2"></i> Logout</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register"><i class="fas fa-user-plus me-1"></i> Register</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary ms-2" asp-controller="Account" asp-action="Login"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-5">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer py-4">
+        <div class="container">
+            <hr class="my-4">
+            <div class="text-center">
+                &copy; @DateTime.Now.Year - TenderBridge. All rights reserved.
+                <a asp-controller="Home" asp-action="Privacy" class="ms-3">Privacy Policy</a>
+            </div>
+            <div class="text-center mt-2">
+                <small>
+                    Powered by <a href="https://brightsofttech.co.ke/" target="_blank">Brightsoft Technologies</a>
+                </small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Ladda -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/spin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.jquery.min.js"></script>
+
+    <!-- Toastr -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        toastr.options = {
+            positionClass: "toast-bottom-right",
+            progressBar: true,
+            timeOut: 5000
+        };
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

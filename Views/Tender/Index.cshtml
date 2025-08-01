@@ -1,0 +1,209 @@
+﻿@model TenderViewModel
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Available Tenders</h2>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tender No</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Published Date</th>
+                                    <th>Closing Date</th>
+                                    <th>Days Remaining</th>
+                                    <th>Status</th>
+                                    <th>Attachments</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tender in Model.Tenders)
+                                {
+                                    <tr class="bg-light">
+                                        <td>@tender.TenderNo</td>
+                                        <td>@tender.Description</td>
+                                        <td>@tender.CategoryCode</td>
+                                        <td>@tender.PublishDate.ToString("dd/MM/yyyy")</td>
+                                        <td class="@(tender.DaysRemaining <= 3 ? "text-danger fw-bold fs-6" : "")">
+                                            @tender.ClosingDate.ToString("dd/MM/yyyy")
+                                        </td>
+                                        <td class="@(tender.DaysRemaining <= 3 ? "text-danger fw-bold fs-6" : "")">
+                                            @tender.DaysRemaining
+                                        </td>
+                                        <td>@tender.Status</td>
+                                        <td>
+                                            @if (tender.Attachments.Any())
+                                            {
+                                                <button class="btn btn-sm btn-outline-primary toggle-attachments"
+                                                        data-tender-id="@tender.SystemId">
+                                                    <i class="fas fa-paperclip"></i> @tender.Attachments.Count
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">None</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (tender.Attachments.Any())
+                                            {
+                                                <a href="@Url.Action("Download", "Tender", new { id = tender.SystemId })"
+                                                   class="btn btn-sm btn-primary download-tender"
+                                                   title="Download Tender Document"
+                                                   data-tender-id="@tender.SystemId">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                            }
+                                            <a href="@Url.Action("UploadDocument", "Tender", new { tenderId = tender.SystemIdGuid })"
+                                               class="btn btn-sm btn-info respond-tender"
+                                               title="Upload Document"
+                                               data-tender-id="@tender.SystemId">
+                                                <i class="fas fa-reply"></i> Respond
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                    @if (tender.Attachments.Any())
+                                    {
+                                        <tr class="attachment-row" data-tender-id="@tender.SystemId" style="display: none;">
+                                            <td colspan="9">
+                                                <div class="ps-4">
+                                                    <h6>Attachments:</h6>
+                                                    <ul class="list-unstyled">
+                                                        @foreach (var attachment in tender.Attachments)
+                                                        {
+                                                            <li>
+                                                                <a href="@Url.Action("DownloadAttachment", "Tender", new { attachmentId = attachment.SystemId })"
+                                                                   class="btn btn-sm btn-link text-start download-attachment"
+                                                                   title="Download @attachment.FileName.@attachment.FileExtension"
+                                                                   data-attachment-id="@attachment.SystemId">
+                                                                    <i class="fas fa-file me-2"></i>
+                                                                    @attachment.FileName.@attachment.FileExtension
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        .toggle-attachments {
+            min-width: 60px;
+        }
+
+        .attachment-row {
+            background-color: #f8f9fa;
+        }
+
+        .download-tender, .respond-tender, .download-attachment {
+            position: relative;
+        }
+
+            .download-tender.loading::after,
+            .respond-tender.loading::after,
+            .download-attachment.loading::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 16px;
+                height: 16px;
+                margin: -8px 0 0 -8px;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+            }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Toggle attachment visibility
+            $('.toggle-attachments').click(function() {
+                var tenderId = $(this).data('tender-id');
+                $('.attachment-row[data-tender-id="' + tenderId + '"]').toggle();
+            });
+
+            // Handle download actions with loading indicators
+            $('.download-tender, .download-attachment, .respond-tender').click(function(e) {
+                var button = $(this);
+                if (button.hasClass('loading')) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                button.addClass('loading');
+                button.find('i').hide();
+
+                // For download links, the page will unload so we don't need to remove the loading state
+                // For other actions, we'll handle the loading state in their respective event handlers
+            });
+
+            // Handle form submissions with error display
+            $('form').submit(function(e) {
+                var form = $(this);
+                var submitButton = form.find('button[type="submit"]');
+
+                if (submitButton.hasClass('loading')) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                submitButton.addClass('loading');
+                submitButton.prop('disabled', true);
+                submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+            });
+        });
+    </script>
+}

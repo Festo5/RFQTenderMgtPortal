@@ -1,0 +1,758 @@
+﻿@model RfqViewModel
+@{
+    var colorSettings = Model.ColorSettings;
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">Request For Quote</h3>
+
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="mb-3 text-end">
+                        <button id="submitAllQuotes" class="btn" style="background-color: @colorSettings.Tertiary1Color; border-color: @colorSettings.Tertiary1Color; color: white;">
+                            <i class="fas fa-paper-plane me-2"></i>Submit All Quotes
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="align-middle">Description</th>
+                                    <th class="text-center align-middle">Quantity</th>
+                                    <th class="text-center align-middle">Unit Cost</th>
+                                    <th class="text-center align-middle">VAT Option</th>
+                                    <th class="text-center align-middle">VAT %</th>
+                                    <th class="text-center align-middle">Total</th>
+                                    <th class="text-center align-middle">Cost Incl. VAT</th>
+                                    <th class="text-center align-middle">Category</th>
+                                    <th class="text-center align-middle">Days Remaining</th>
+                                    <th class="text-center align-middle">Status</th>
+                                    <th class="text-center align-middle">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var line in Model.OpenLines)
+                                {
+                                    var isSubmitted = Model.QuotedLineIds.Contains(line.SystemIdGuid) || line.IsAlreadyQuoted;
+                                    var vatOption = isSubmitted ? line.VatOption : "Vatable";
+                                    //var vatPercentage = isSubmitted ? line.VatPercentage : Model.DefaultVatPercentage;
+                                    var vatPercentage = line.VatPercentage;
+                                    var priceIncludesVAT = line.PriceIncludesVAT;
+                                    var unitCost = isSubmitted ? line.DirectUnitCost : 0m;
+                                    var quantity = line.Quantity;
+
+                                    // Calculate total based on VAT option and priceIncludesVAT
+                                    var total = 0m;
+                                    if (isSubmitted)
+                                    {
+                                        if (vatOption == "Vatable")
+                                        {
+                                            if (priceIncludesVAT)
+                                            {
+                                                total = quantity * line.DirectUnitCost;
+                                            }
+                                            else
+                                            {
+                                                total = quantity * line.DirectUnitCost * (1m + line.VatPercentage / 100m);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            total = quantity * line.DirectUnitCost;
+                                        }
+                                    }
+
+                                    <tr data-system-id="@line.SystemId"
+                                        data-system-id-guid="@line.SystemIdGuid"
+                                        data-submitted="@isSubmitted.ToString().ToLower()"
+                                        data-specifications="@line.Specifications"
+                                        data-additional-notes="@line.AdditionalNotes"
+                                        data-expirationdate="@(line.RfqExpirationDate?.ToString("yyyy-MM-dd"))">
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                @line.Description
+                                                <button class="btn btn-sm btn-link ms-2 view-specs"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#specsModal"
+                                                        data-item-no="@line.No"
+                                                        data-description="@line.Description"
+                                                        title="View item specifications">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">@quantity.ToString("0.00")</td>
+                                        <td class="text-center align-middle">
+                                            <input type="number"
+                                                   step="0.01"
+                                                   min="0"
+                                                   class="form-control form-control-sm unit-cost-input"
+                                                   value="@(isSubmitted? line.DirectUnitCost.ToString("0.00") : "")"
+                                                   placeholder="0.00"
+                                                   @(isSubmitted ? "disabled title='Quote already submitted'" : "") />
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <select class="form-select form-select-sm vat-option-select"
+                                                    @(isSubmitted ? "disabled title='Quote already submitted'" : "")>
+                                                <option value="Vatable" selected="@(vatOption == "Vatable")">Vatable</option>
+                                                <option value="ZeroRated" selected="@(vatOption == "ZeroRated")">Zero Rated</option>
+                                                <option value="Exempt" selected="@(vatOption == "Exempt")">Exempt</option>
+                                            </select>
+                                        </td>
+
+                                        <td class="text-center align-middle">
+                                            <input type="number"
+                                                   step="0.01"
+                                                   min="0"
+                                                   max="100"
+                                                   class="form-control form-control-sm vat-percentage-input"
+                                                   value="@vatPercentage.ToString("0.00")"
+                                                   placeholder="0.00"
+                                                   @(isSubmitted ? "disabled title='Quote already submitted'" : "") />
+                                        </td>
+
+                                        <td class="text-center align-middle total-amount">
+                                            @total.ToString("0.00")
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <input type="checkbox"
+                                                   class="form-check-input vat-inclusive-checkbox"
+                                                   @(isSubmitted ? "disabled title='Quote already submitted'" : "")
+                                                   @(priceIncludesVAT ? "checked" : "") />
+                                        </td>
+                                        <td class="text-center align-middle">@line.CategoryCode</td>
+                                        <td class="text-center align-middle @(line.DaysRemaining <= 3 ? "text-danger fw-bold" : "")">
+                                            @line.DaysRemaining
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            @if (isSubmitted)
+                                            {
+                                                <span class="badge" style="background-color: @colorSettings.Tertiary1Color">Submitted</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge" style="background-color: @colorSettings.Tertiary2Color">Pending</span>
+                                            }
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <button class="btn btn-sm submit-quote"
+                                                    style="background-color: @colorSettings.PrimaryColor; border-color: @colorSettings.PrimaryColor; color: white;"
+                                                    data-item-no="@line.No"
+                                                    @(isSubmitted ? "disabled title='Quote already submitted'" : "")>
+                                                @(isSubmitted ? "Submitted" : "Submit Quote")
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Specifications Modal -->
+<div class="modal fade" id="specsModal" tabindex="-1" aria-labelledby="specsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: @colorSettings.Tertiary3Color; color: white;">
+                <h5 class="modal-title" id="specsModalLabel">Item Specifications</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Item Number</h6>
+                        <p id="modalItemNo" class="fw-bold">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Description</h6>
+                        <p id="modalDescription" class="fw-bold">-</p>
+                    </div>
+                </div>
+
+                <div class="specs-tabs">
+                    <ul class="nav nav-tabs" id="specsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">
+                                <i class="fas fa-info-circle me-2"></i>Details
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="technical-tab" data-bs-toggle="tab" data-bs-target="#technical" type="button" role="tab" aria-controls="technical" aria-selected="false">
+                                <i class="fas fa-cogs me-2"></i>Technical Specs
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
+                                <i class="fas fa-file-alt me-2"></i>Documents
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="specsTabContent">
+                        <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="spec-item mb-3">
+                                        <h6 class="text-muted">Category</h6>
+                                        <p id="modalCategory">-</p>
+                                    </div>
+                                    <div class="spec-item mb-3">
+                                        <h6 class="text-muted">Quantity</h6>
+                                        <p id="modalQuantity">-</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="spec-item mb-3">
+                                        <h6 class="text-muted">Days Remaining</h6>
+                                        <p id="modalDaysRemaining">-</p>
+                                    </div>
+                                    <div class="spec-item mb-3">
+                                        <h6 class="text-muted">Expiration Date</h6>
+                                        <p id="modalExpirationDate">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <h6 class="text-muted">Additional Notes</h6>
+                                <p id="modalNotes" class="text-muted">No additional notes available</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="technical" role="tabpanel" aria-labelledby="technical-tab">
+                            <div id="technicalSpecsContent">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Select an item to view technical specifications.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Supporting documents will be listed here when available.
+                            </div>
+                            <div id="documentsContent">
+                                <!-- Will be loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background-color: @colorSettings.SecondaryColor; border-color: @colorSettings.SecondaryColor; color: white;" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Button Styles */
+        .btn-primary {
+            background-color: @colorSettings.PrimaryColor;
+            border-color: @colorSettings.PrimaryColor;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background-color: @colorSettings.PrimaryColor;
+                border-color: @colorSettings.PrimaryColor;
+                opacity: 0.9;
+            }
+
+        .btn-secondary {
+            background-color: @colorSettings.SecondaryColor;
+            border-color: @colorSettings.SecondaryColor;
+            color: white;
+        }
+
+            .btn-secondary:hover {
+                background-color: @colorSettings.SecondaryColor;
+                border-color: @colorSettings.SecondaryColor;
+                opacity: 0.9;
+            }
+
+        .btn-success {
+            background-color: @colorSettings.Tertiary1Color;
+            border-color: @colorSettings.Tertiary1Color;
+            color: white;
+        }
+
+            .btn-success:hover {
+                background-color: @colorSettings.Tertiary1Color;
+                border-color: @colorSettings.Tertiary1Color;
+                opacity: 0.9;
+            }
+
+        /* Badge Styles */
+        .badge.bg-success {
+            background-color: @colorSettings.Tertiary1Color !important;
+            color: white;
+        }
+
+        .badge.bg-warning {
+            background-color: @colorSettings.Tertiary2Color !important;
+            color: white !important;
+        }
+
+        /* Form Controls */
+        .vat-option-select:focus {
+            border-color: @colorSettings.Tertiary3Color;
+            box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.1);
+        }
+
+        .vat-inclusive-checkbox:checked {
+            background-color: @colorSettings.Tertiary3Color;
+            border-color: @colorSettings.Tertiary3Color;
+        }
+
+        .vat-inclusive-checkbox:focus {
+            box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            background-color: @colorSettings.Tertiary3Color;
+            color: white;
+        }
+
+        /* Tab Navigation */
+        .specs-tabs .nav-link.active {
+            color: @colorSettings.Tertiary3Color;
+            border-bottom-color: @colorSettings.Tertiary3Color;
+        }
+
+        .specs-tabs .nav-link:hover:not(.active) {
+            color: @colorSettings.Tertiary3Color;
+        }
+
+        /* Disabled States */
+        .btn-primary:disabled {
+            background-color: @colorSettings.PrimaryColor;
+            border-color: @colorSettings.PrimaryColor;
+            opacity: 0.5;
+        }
+
+        .btn-success:disabled {
+            background-color: @colorSettings.Tertiary1Color;
+            border-color: @colorSettings.Tertiary1Color;
+            opacity: 0.5;
+        }
+
+        /* Table Hover */
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* View Specs Button */
+        .view-specs {
+            color: #6c757d;
+            padding: 0.15rem 0.3rem;
+            font-size: 0.875rem;
+        }
+
+            .view-specs:hover {
+                color: @colorSettings.PrimaryColor;
+            }
+
+        /* Other Styles */
+        .vat-option-select {
+            min-width: 100px;
+        }
+
+        .vat-percentage-input {
+            max-width: 80px;
+        }
+
+        .total-amount {
+            font-weight: bold;
+        }
+
+        .specs-tabs .nav-link {
+            font-weight: 500;
+        }
+
+        .spec-item h6 {
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .spec-item p {
+            margin-bottom: 0;
+        }
+
+        #specsModal .modal-header {
+            padding: 1rem 1.5rem;
+        }
+
+        #specsModal .modal-body {
+            padding: 1.5rem;
+        }
+
+        .specs-content {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+            .specs-content p {
+                margin-bottom: 0.5rem;
+            }
+
+            .specs-content ul, .specs-content ol {
+                padding-left: 1.5rem;
+            }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            console.log("Document ready - initializing RFQ submission");
+            var defaultVatPercentage = @Json.Serialize(Model.DefaultVatPercentage);
+
+            // Initialize tooltips
+            $('[title]').tooltip();
+
+            // Flag to prevent duplicate submissions
+            let isSubmitting = false;
+
+            // Function to calculate and update totals
+            function updateTotals() {
+                $('tbody tr').each(function() {
+                    const row = $(this);
+                    const quantity = parseFloat(row.find('td:eq(1)').text());
+                    const unitCost = parseFloat(row.find('.unit-cost-input').val()) || 0;
+                    const vatPercentage = parseFloat(row.find('.vat-percentage-input').val()) || 0;
+                    const vatOption = row.find('.vat-option-select').val();
+                    const priceIncludesVAT = row.find('.vat-inclusive-checkbox').is(':checked');
+
+                    // Calculate total based on VAT option and priceIncludesVAT
+                    let total = quantity * unitCost;
+
+                    if (vatOption === 'Vatable') {
+                        if (priceIncludesVAT) {
+                            total = quantity * unitCost;
+                        } else {
+                            total = quantity * unitCost * (1 + vatPercentage / 100);
+                        }
+                    }
+
+                    row.find('.total-amount').text(total.toFixed(2));
+                });
+            }
+
+            // Update totals when inputs change
+            $(document).on('input', '.unit-cost-input, .vat-percentage-input', updateTotals);
+            $(document).on('change', '.vat-option-select', function() {
+                const row = $(this).closest('tr');
+                const vatOption = $(this).val();
+                const vatPercentageInput = row.find('.vat-percentage-input');
+                const vatInclusiveCheckbox = row.find('.vat-inclusive-checkbox');
+
+                if (vatOption === 'Vatable') {
+                    vatPercentageInput.val(defaultVatPercentage.toFixed(2)).prop('disabled', false);
+                    vatInclusiveCheckbox.prop('disabled', false);
+                } else {
+                    vatPercentageInput.val('0.00').prop('disabled', true);
+                    vatInclusiveCheckbox.prop('disabled', true).prop('checked', false);
+                }
+
+                updateTotals();
+            });
+
+            // Handle changes to VAT inclusive checkbox
+            $(document).on('change', '.vat-inclusive-checkbox', updateTotals);
+
+            // Initialize VAT options and totals
+            $('.vat-option-select').trigger('change');
+
+            // Handle view specifications button click
+            $(document).on('click', '.view-specs', function() {
+                const button = $(this);
+                const row = button.closest('tr');
+
+                $('#modalItemNo').text(button.data('item-no'));
+                $('#modalDescription').text(button.data('description'));
+                $('#modalCategory').text(row.find('td:eq(7)').text());
+                $('#modalQuantity').text(row.find('td:eq(1)').text());
+                $('#modalDaysRemaining').text(row.find('td:eq(8)').text());
+
+                const expirationDate = row.data('expirationdate');
+                $('#modalExpirationDate').text(expirationDate || '-');
+
+                const additionalNotes = row.data('additional-notes');
+                $('#modalNotes').text(additionalNotes && additionalNotes.trim() !== '' ?
+                    additionalNotes : 'No additional notes available');
+
+                const specifications = row.data('specifications');
+                if (specifications && specifications.trim() !== '') {
+                    $('#technicalSpecsContent').html('<div class="specs-content">' + specifications + '</div>');
+                } else {
+                    $('#technicalSpecsContent').html('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No technical specifications available.</div>');
+                }
+
+                $('#specsTab .nav-link').first().tab('show');
+            });
+
+            // Single quote submission handler
+            $(document).on('click', '.submit-quote:not(:disabled)', function(e) {
+                if (isSubmitting) {
+                    console.log("Submission in progress - ignoring click");
+                    return;
+                }
+
+                const button = $(this);
+                const row = button.closest('tr');
+                const systemIdGuid = row.data('system-id-guid');
+                const itemNo = button.data('item-no');
+                const unitCostInput = row.find('.unit-cost-input');
+                const unitCost = parseFloat(unitCostInput.val());
+                const priceIncludesVAT = row.find('.vat-inclusive-checkbox').is(':checked');
+                const vatOption = row.find('.vat-option-select').val();
+                const vatPercentage = parseFloat(row.find('.vat-percentage-input').val()) || 0;
+                const quantity = parseFloat(row.find('td:eq(1)').text());
+
+                // Validate input
+                if (isNaN(unitCost)) {
+                    alert('Please enter a valid unit cost');
+                    unitCostInput.focus();
+                    return;
+                }
+
+                if (unitCost <= 0) {
+                    alert('Unit cost must be greater than zero');
+                    unitCostInput.focus();
+                    return;
+                }
+
+                if (isNaN(quantity) || quantity <= 0) {
+                    alert('Quantity must be greater than zero');
+                    return;
+                }
+
+                if (vatOption === 'Vatable' && (isNaN(vatPercentage) || vatPercentage <= 0)) {
+                    alert('Please enter a valid VAT percentage for Vatable items');
+                    row.find('.vat-percentage-input').focus();
+                    return;
+                }
+
+                // Confirm submission
+                if (confirm(`Submit quote for ${row.find('td:eq(0)').text().trim()}?\nQuantity: ${quantity}\nUnit Cost: ${unitCost.toFixed(2)}\nVAT Option: ${vatOption}\nVAT %: ${vatPercentage}\nPrice Includes VAT: ${priceIncludesVAT ? 'Yes' : 'No'}`)) {
+                    submitQuote(row, systemIdGuid, itemNo, unitCost, priceIncludesVAT, vatOption, vatPercentage, quantity);
+                }
+            });
+
+            // Bulk submission handler
+            $('#submitAllQuotes').on('click', function() {
+                if (isSubmitting) {
+                    console.log("Submission in progress - ignoring click");
+                    return;
+                }
+
+                const quotesToSubmit = [];
+                const invalidRows = [];
+                let hasPendingSubmissions = false;
+
+                $('tbody tr').each(function() {
+                    const row = $(this);
+                    const button = row.find('.submit-quote');
+
+                    if (button.is(':disabled')) {
+                        return;
+                    }
+
+                    hasPendingSubmissions = true;
+                    const unitCostInput = row.find('.unit-cost-input');
+                    const unitCost = parseFloat(unitCostInput.val());
+                    const priceIncludesVAT = row.find('.vat-inclusive-checkbox').is(':checked');
+                    const systemIdGuid = row.data('system-id-guid');
+                    const itemNo = button.data('item-no');
+                    const vatOption = row.find('.vat-option-select').val();
+                    const vatPercentage = parseFloat(row.find('.vat-percentage-input').val()) || 0;
+                    const quantity = parseFloat(row.find('td:eq(1)').text());
+
+                    if (!isNaN(unitCost) && unitCost > 0 && !isNaN(quantity) && quantity > 0) {
+                        if (vatOption === 'Vatable' && (isNaN(vatPercentage) || vatPercentage <= 0)) {
+                            invalidRows.push(row);
+                            return;
+                        }
+
+                        quotesToSubmit.push({
+                            row: row,
+                            SystemId2: systemIdGuid,
+                            ItemNo: itemNo,
+                            UnitCost: unitCost,
+                            PriceIncludesVAT: priceIncludesVAT,
+                            VatOption: vatOption,
+                            VatPercentage: vatPercentage,
+                            Quantity: quantity
+                        });
+                    } else {
+                        invalidRows.push(row);
+                    }
+                });
+
+                if (!hasPendingSubmissions) {
+                    alert('All quotes have already been submitted');
+                    return;
+                }
+
+                if (quotesToSubmit.length === 0) {
+                    alert('Please enter valid unit costs (greater than zero) and quantities (greater than zero) for at least one line');
+                    if (invalidRows.length > 0) {
+                        invalidRows[0].find('.unit-cost-input').focus();
+                    }
+                    return;
+                }
+
+                if (confirm(`Submit ${quotesToSubmit.length} quote(s)?`)) {
+                    submitAllQuotes(quotesToSubmit);
+                }
+            });
+
+            function submitQuote(row, systemIdGuid, itemNo, unitCost, priceIncludesVAT, vatOption, vatPercentage, quantity) {
+                isSubmitting = true;
+                const button = row.find('.submit-quote');
+
+                // Update UI
+                button.addClass('submit-loading');
+                button.prop('disabled', true);
+                button.html('Submitting...');
+
+                $.ajax({
+                    url: '/Rfq/SubmitQuote',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        SystemId2: systemIdGuid,
+                        ItemNo: itemNo,
+                        UnitCost: unitCost,
+                        PriceIncludesVAT: priceIncludesVAT,
+                        VatOption: vatOption,
+                        VatPercentage: vatPercentage,
+                        Quantity: quantity
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            // Update UI
+                            row.attr('data-submitted', 'true');
+                            row.find('.unit-cost-input, .vat-inclusive-checkbox, .vat-option-select, .vat-percentage-input').prop('disabled', true);
+                            row.find('td:eq(9)').html('<span class="badge" style="background-color: @colorSettings.Tertiary1Color">Submitted</span>');
+                            button.removeClass('submit-loading')
+                                 .html('Submitted')
+                                 .prop('title', 'Quote already submitted');
+
+                            alert(`Quote submitted successfully.\nDocument: ${response.documentNo}`);
+                        } else {
+                            button.removeClass('submit-loading')
+                                 .prop('disabled', false)
+                                 .html('Submit Quote');
+                            alert(response.message || 'Failed to submit quote');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("Error submitting quote:", xhr.responseText);
+                        button.removeClass('submit-loading')
+                             .prop('disabled', false)
+                             .html('Submit Quote');
+
+                        let errorMessage = 'Error submitting quote. Please try again.';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response && response.message) {
+                                errorMessage = response.message;
+                            }
+                        } catch (e) {
+                            console.error("Error parsing error response:", e);
+                        }
+
+                        alert(errorMessage);
+                    },
+                    complete: function() {
+                        isSubmitting = false;
+                    }
+                });
+            }
+
+            function submitAllQuotes(quotes) {
+                isSubmitting = true;
+                const submitButton = $('#submitAllQuotes');
+
+                // Update UI
+                submitButton.addClass('submit-loading');
+                submitButton.prop('disabled', true);
+                submitButton.html('Submitting...');
+
+                // Prepare data
+                const quoteData = quotes.map(function(quote) {
+                    return {
+                        SystemId2: quote.SystemId2,
+                        ItemNo: quote.ItemNo,
+                        UnitCost: quote.UnitCost,
+                        PriceIncludesVAT: quote.PriceIncludesVAT,
+                        VatOption: quote.VatOption,
+                        VatPercentage: quote.VatPercentage,
+                        Quantity: quote.Quantity
+                    };
+                });
+
+                $.ajax({
+                    url: '/Rfq/SubmitAllQuotes',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(quoteData),
+                    success: function(response) {
+                        if (response.success) {
+                            // Update all submitted quotes
+                            quotes.forEach(function(quote) {
+                                const row = quote.row;
+                                row.attr('data-submitted', 'true');
+                                row.find('.unit-cost-input, .vat-inclusive-checkbox, .vat-option-select, .vat-percentage-input').prop('disabled', true);
+                                row.find('.submit-quote')
+                                    .removeClass('submit-loading')
+                                    .prop('disabled', true)
+                                    .html('Submitted')
+                                    .prop('title', 'Quote already submitted');
+                                row.find('td:eq(9)').html('<span class="badge" style="background-color: @colorSettings.Tertiary1Color">Submitted</span>');
+                            });
+
+                            alert(`${quotes.length} quotes submitted successfully.\nDocument: ${response.documentNo}`);
+                        } else {
+                            alert(response.message || 'Failed to submit quotes');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("Error submitting quotes:", xhr.responseText);
+
+                        let errorMessage = 'Error submitting quotes. Please try again.';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response && response.message) {
+                                errorMessage = response.message;
+                            }
+                        } catch (e) {
+                            console.error("Error parsing error response:", e);
+                        }
+
+                        alert(errorMessage);
+                        submitButton.removeClass('submit-loading')
+                                  .prop('disabled', false)
+                                  .html('<i class="fas fa-paper-plane me-2"></i>Submit All Quotes');
+                    },
+                    complete: function() {
+                        isSubmitting = false;
+                    }
+                });
+            }
+        });
+    </script>
+}

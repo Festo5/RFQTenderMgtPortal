@@ -1,0 +1,376 @@
+@model RecruitmentPortal.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Home Page";
+    var colorSettings = Model.ColorSettings;
+}
+
+<style>
+    :root {
+        @colorSettings.PrimaryColorCss
+        @colorSettings.SecondaryColorCss
+        @colorSettings.Tertiary1ColorCss
+        @colorSettings.Tertiary2ColorCss
+        @colorSettings.Tertiary3ColorCss
+    }
+
+    .rfq-hero {
+        position: relative;
+        background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
+        background-size: cover;
+        background-position: center;
+        height: 35vh;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #eaeaea;
+    }
+
+    .rfq-hero-content {
+        max-width: 800px;
+        padding: 0 20px;
+    }
+
+    .rfq-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        line-height: 1.3;
+        color: #2c3e50;
+    }
+
+    .rfq-hero p {
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+        color: #2c3e50;
+    }
+
+    .dashboard-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .dashboard-section {
+        margin-bottom: 2rem;
+    }
+
+        .dashboard-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+            color: #2c3e50;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 0.4rem;
+        }
+
+            .dashboard-section h2:after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 50px;
+                height: 2px;
+                background: var(--primary-color);
+            }
+
+    .status-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.2rem;
+    }
+
+    .status-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.2rem;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #f5f5f5;
+    }
+
+        .status-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .status-card .card-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.5rem;
+        }
+
+        .status-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .status-card .count {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0.4rem 0;
+            color: #2c3e50;
+        }
+
+        .status-card a {
+            display: inline-block;
+            padding: 0.5rem 1.2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 0.8rem;
+            border: 1px solid transparent;
+        }
+
+            .status-card a:hover {
+                background-color: white;
+                color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+
+    .open-card {
+        border-top: 3px solid var(--tertiary3-color);
+    }
+
+        .open-card .card-icon {
+            background: rgba(var(--tertiary3-color), 0.1);
+            color: var(--tertiary3-color);
+        }
+
+    .closed-card {
+        border-top: 3px solid var(--secondary-color);
+    }
+
+        .closed-card .card-icon {
+            background: rgba(var(--secondary-color), 0.1);
+            color: var(--secondary-color);
+        }
+
+    .awarded-card {
+        border-top: 3px solid var(--tertiary1-color);
+    }
+
+        .awarded-card .card-icon {
+            background: rgba(var(--tertiary1-color), 0.1);
+            color: var(--tertiary1-color);
+        }
+
+    .imprest-card {
+        border-top: 3px solid var(--tertiary2-color);
+    }
+
+        .imprest-card .card-icon {
+            background: rgba(var(--tertiary2-color), 0.1);
+            color: var(--tertiary2-color);
+        }
+
+    .item-card {
+        border-top: 3px solid var(--tertiary1-color);
+    }
+
+        .item-card .card-icon {
+            background: rgba(var(--tertiary1-color), 0.1);
+            color: var(--tertiary1-color);
+        }
+
+    .completed-card {
+        border-top: 3px solid var(--secondary-color);
+    }
+
+        .completed-card .card-icon {
+            background: rgba(var(--secondary-color), 0.1);
+            color: var(--secondary-color);
+        }
+
+    .btn-explore {
+        display: inline-block;
+        padding: 0.7rem 1.8rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        margin-top: 1.2rem;
+        border: 1px solid transparent;
+    }
+
+        .btn-explore:hover {
+            background-color: white;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+    .section-divider {
+        height: 1px;
+        background: #eaeaea;
+        margin: 2rem 0;
+    }
+</style>
+
+<div class="rfq-hero">
+    <div class="rfq-hero-content">
+        <h1>Tender & RFQ Management</h1>
+        <p>Efficient procurement management system</p>
+        <a href="#dashboard" class="btn-explore">View Dashboard</a>
+    </div>
+</div>
+
+<div class="dashboard-container" id="dashboard">
+    <!-- RFQs Section -->
+    <div class="dashboard-section">
+        <h2>Request for Quotations</h2>
+        <div class="status-cards">
+            <div class="status-card open-card">
+                <div class="card-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3>Open RFQs</h3>
+                <div class="count">@Model.OpenRfqCount</div>
+                <a asp-controller="Rfq" asp-action="Open">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card closed-card">
+                <div class="card-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <h3>Closed RFQs</h3>
+                <div class="count">@Model.ClosedRfqCount</div>
+                <a asp-controller="Rfq" asp-action="Closed">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card awarded-card">
+                <div class="card-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3>Awarded RFQs</h3>
+                <div class="count">@Model.AwardedRfqCount</div>
+                <a asp-controller="Rfq" asp-action="Awarded">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Tenders Section -->
+    <div class="dashboard-section">
+        <h2>Tenders</h2>
+        <div class="status-cards">
+            <div class="status-card open-card">
+                <div class="card-icon">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <h3>Open Tenders</h3>
+                <div class="count">@Model.OpenTenderCount</div>
+                <a asp-controller="Tender" asp-action="Index" asp-route-status="Open">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card closed-card">
+                <div class="card-icon">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <h3>Closed Tenders</h3>
+                <div class="count">@Model.ClosedTenderCount</div>
+                <a asp-controller="Tender" asp-action="Index" asp-route-status="Closed">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card awarded-card">
+                <div class="card-icon">
+                    <i class="fas fa-award"></i>
+                </div>
+                <h3>Awarded Tenders</h3>
+                <div class="count">@Model.AwardedTenderCount</div>
+                <a asp-controller="Tender" asp-action="Index" asp-route-status="Awarded">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Requisitions Section -->
+    <div class="dashboard-section">
+        <h2>Requisitions</h2>
+        <div class="status-cards">
+            <div class="status-card imprest-card">
+                <div class="card-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3>Open</h3>
+                <div class="count">@Model.OpenImprestRequisitionCount</div>
+                <a asp-controller="ImprestItemRequisition" asp-action="Index" asp-route-status="Open" asp-route-requisitionType="Imprest">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card awarded-card">
+                <div class="card-icon">
+                    <i class="fas fa-thumbs-up"></i>
+                </div>
+                <h3>Approved</h3>
+                <div class="count">@Model.ApprovedRequisitionCount</div>
+                <a asp-controller="ImprestItemRequisition" asp-action="Index" asp-route-status="Approved">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card item-card">
+                <div class="card-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3>Cancelled</h3>
+                <div class="count">@Model.CancelledItemRequisitionCount</div>
+                <a asp-controller="ImprestItemRequisition" asp-action="Index" asp-route-status="Cancelled" asp-route-requisitionType="Item">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>
+
+            <div class="status-card completed-card">
+                <div class="card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Closed</h3>
+                <div class="count">@Model.CompletedRequisitionCount</div>
+                <a asp-controller="ImprestItemRequisition" asp-action="Index" asp-route-status="Posted">
+                    <i class="fas fa-eye mr-1"></i> View
+                </a>
+            </div>            
+
+        </div>
+    </div>
+</div>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />

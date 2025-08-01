@@ -1,0 +1,37 @@
+﻿@model JobListingViewModel
+
+<div class="container">
+    <h2>Available Job Positions</h2>
+    
+    <form asp-action="Apply" method="post">
+        <div class="row">
+            @foreach (var job in Model.ActiveJobs)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@job.Title</h5>
+                            <p class="card-text">@job.Description</p>
+                            <p><strong>Location:</strong> @job.Location</p>
+                            <p><strong>Type:</strong> @job.JobType</p>
+                        </div>
+                        <div class="card-footer">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" 
+                                       name="SelectedJobId" id="job-@job.Id" 
+                                       value="@job.Id">
+                                <label class="form-check-label" for="job-@job.Id">
+                                    Apply for this position
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">Continue Application</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,193 @@
+﻿@using RecruitmentPortal.Models.ViewModels.Account
+@model LoginModel
+@{
+    ViewData["Title"] = "Login to Your Account";
+    var colorSettings = Model.ColorSettings;
+}
+
+<style>
+    :root {
+        @colorSettings.PrimaryColorCss
+        @colorSettings.SecondaryColorCss
+        @colorSettings.Tertiary1ColorCss
+        @colorSettings.Tertiary2ColorCss
+        @colorSettings.Tertiary3ColorCss
+    }
+
+    .login-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+    .login-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 2.5rem;
+        text-align: center;
+    }
+
+        .login-header h3 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+    .login-body {
+        padding: 2.5rem;
+    }
+
+    .form-floating label {
+        color: #666;
+    }
+
+    .form-control {
+        border-radius: 5px;
+        padding: 15px;
+        border: 1px solid #ddd;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem fade( @colorSettings.PrimaryColor, 25%);
+    }
+
+    .btn-login {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border: none;
+        padding: 12px;
+        font-weight: 600;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+    .forgot-password-link {
+        color: #666;
+        transition: color 0.2s;
+    }
+
+    .forgot-password-link:hover {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    .register-link {
+        color: var(--primary-color);
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+
+    .register-link:hover {
+        color: var(--secondary-color);
+        text-decoration: none;
+    }
+
+    .divider {
+        border-top: 1px solid #eee;
+        margin: 1.5rem 0;
+        position: relative;
+    }
+
+    .divider-text {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: white;
+        padding: 0 15px;
+        color: #999;
+        font-size: 0.8rem;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label {
+        color: #666;
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h3><i class="fas fa-sign-in-alt me-2"></i> Welcome Back</h3>
+            <p class="mb-0">Sign in to your tender management account</p>
+        </div>
+        <div class="login-body">
+            <form asp-action="Login">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="form-floating mb-4">
+                    <input asp-for="Email" class="form-control" placeholder="name@example.com">
+                    <label asp-for="Email">Email address</label>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Password">
+                    <label asp-for="Password">Password</label>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input">
+                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                    </div>
+                    <div>
+                        <a asp-action="SendPasswordResetLink" class="forgot-password-link">Forgot password?</a>
+                    </div>
+                </div>
+
+                <div class="d-grid mb-4">
+                    <button class="btn btn-login btn-lg ladda-button" type="submit" data-style="zoom-in">
+                        <span class="ladda-label">Login</span>
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <span class="divider-text">OR</span>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0">Don't have an account? <a asp-action="Register" class="register-link">Create one</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            Ladda.bind('.ladda-button', { timeout: 2000 });
+            $('.form-floating input').on('focus blur', function () {
+                $(this).parents('.form-floating').toggleClass('focused', $(this).is(':focus') || $(this).val() !== '');
+            });
+        });
+    </script>
+}
